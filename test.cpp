@@ -88,6 +88,7 @@ void displayProcesses(){
 int main(){
   //Process *pr;
   createProcess();
+  createProcess();
   displayProcesses();
   return 0;
 }
