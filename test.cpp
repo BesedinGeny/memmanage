@@ -65,16 +65,21 @@ void createProcess(){
 // show queues
 void displayProcesses(){
   cout << "\n\nCurrent working processes:\n";
+  int j = 1;
   for(int i = 9; i >= 0; i--){
     // buffer queue
       queue<Process> tmp;
-      int j = 1;
+
       // going through queue
       while(!HQ[i].empty()){
         Process cur = HQ[i].front();
         // rewriting to make queue as before
         HQ[i].pop();tmp.push(cur);
-        cout << endl << j++ <<") " << cur.name << " (priority is " << cur.prio << ") - memory: " << cur.mem << " - time: " << cur.lastA << endl;
+        cout << endl << j <<") " << cur.name << " (priority is " << cur.prio;
+        if (cur.is_on_swap) cout << " and is on swap file";
+        else cout << " and is not on a swap file";
+        cout << ") - memory: " << cur.mem << " - time: " << cur.lastA << endl;
+        j++;
       }
       // remaking
       while(!tmp.empty()){
@@ -85,10 +90,37 @@ void displayProcesses(){
 
 }
 
+// ckack RAM for process`s mem
+bool isMemEnough(Process &exe){
+  int memory = exe.mem;
+  int begin = 0; // begin of a proj
+  while (begin + memory <= MAX_SIZE){
+    bool isOk = true; // enough from HERE or not
+    int needmem = memory;
+    int ind = 0;
+    while(isOk && needmem ){
+      if (RAM[begin + ind]){
+        //zanyato
+        begin += ind; // pos of last mem sector
+        isOk = false;
+      }
+      needmem--;ind++;
+    }
+    if (isOk){
+      exe.position = begin;
+      return isOk;//true
+    }
+    begin++; // going ro NEXT mem sector.
+  }
+  return false;
+}
+
 int main(){
   //Process *pr;
   createProcess();
   cout << "";
+  displayProcesses();
+  createProcess();
   displayProcesses();
   return 0;
 }
