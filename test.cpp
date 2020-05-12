@@ -3,9 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <queue>
-#include <utilities>
 #include <time.h>
-#include <windows.h>
 using namespace std;
 //константы
 const int MAX_SIZE = 1000;
@@ -39,7 +37,6 @@ vector<queue<Process>> HQ(10);
 
 // UI creation
 void createProcess(){
-  system("cls");
   // вводим какие-то корректные данные
   cout << "Enter a name of new process: ";
   string name;
@@ -61,7 +58,7 @@ void createProcess(){
   // создаем сам процесс через конструктор
   Process q(name, mem, prior, timeLife);
   // добавляем в очнередь приоритетов (по массив очередей)
-  HQ[prior].push_back(q);
+  HQ[prior].push(q);
   cout << "Process successfully created!\n";
 }
 
@@ -70,25 +67,27 @@ void displayProcesses(){
   cout << "\n\nCurrent working processes:\n";
   for(int i = 9; i >= 0; i--){
     // buffer queue
-      queue<int> tmp;
+      queue<Process> tmp;
       int j = 1;
       // going through queue
       while(!HQ[i].empty()){
-        Procees cur = HQ[i].front();
+        Process cur = HQ[i].front();
         // rewriting to make queue as before
-        HQ[i].pop();tmp.push_back(cur);
+        HQ[i].pop();tmp.push(cur);
         cout << endl << j++ <<") " << cur.name << " (priority is " << cur.prio << ") - memory: " << cur.mem << " - time: " << cur.lastA << endl;
       }
       // remaking
       while(!tmp.empty()){
         Process c = tmp.front();
-        tmp.pop(); HQ[i],push_back(c);
+        tmp.pop(); HQ[i].push(c);
       }
   }
 
 }
 
 int main(){
-
+  //Process *pr;
+  createProcess();
+  displayProcesses();
   return 0;
 }
