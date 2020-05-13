@@ -8,8 +8,7 @@ using namespace std;
 //константы
 const int MAX_SIZE = 1000;
 bool need_upd = false;
-int RAM[MAX_SIZE] = {0};
-
+int RAM[MAX_SIZE + 1] = {0};
 // структура процесса
 class Process{ //struct
 public:
@@ -18,7 +17,7 @@ public:
   int position = -1;
   int prio = 0;
   int time = 0;
-  bool is_on_swap = false;
+  bool is_on_swap = true;
   clock_t lastA;
 
   //constructor
@@ -113,6 +112,85 @@ bool isMemEnough(Process &exe){
     begin++; // going ro NEXT mem sector.
   }
   return false;
+}
+
+void pushProcToSWAP(Process &exe){
+  if (exe.is_on_swap) return; // если процесс уже в свопе, то ничего делать не надо
+  for(int i = exe.position; i < exe.mem + exe.position; i++){
+    //clear RAM
+    RAM[i] = 0;
+  }
+  // update execute proc
+  exe.positon = -1; exe.is_on_swap = true;
+}
+
+void updateRAM(){
+  for(int i = 9; i >= 0; i--){
+    queue<Process> tmp;
+
+    // going through queue
+    while(!HQ[i].empty()){
+      Process cur = HQ[i].front();
+      // rewriting to make queue as before
+      HQ[i].pop();tmp.push(cur);
+      if (cur.is_on_swap) {// либо новый процесс либо грузим из свопа, пока нет разницы
+        // try to place process
+        if (isMemEnough(cur)){ // просто нашли место в памяти
+          //refilling RAM
+          for(int j = 0; j < cur.mem; j++){
+            // get RAM
+            RAM[j + cur.position] = 1;
+          }
+        } else{ /* сейчас оперативка забита
+           надо убрать менее приоритетные процессы
+           (начиная с самых неприоритетных)
+           попробовать поставить данный процесс
+           если получится, то мы будем считать, что
+           что это успех. Не получится, ну ШТОШ буду продолжать все
+           скидывать в своп, что могу и восстанавливать
+           мнее приоритетные процессы при следующих итерация i
+           */
+          int j = 0;
+          bool done = false; // эвристика
+          while (j < i && !done){ // less prio processes
+            queue<Process> tmp1;
+            // going through queue
+            while(!HQ[j].empty() && !done){
+              Process cur1 = HQ[j].front();
+              // rewriting to make queue as before
+              HQ[j].pop();tmp1.push(cur1);
+
+              // удаление процесса
+              int now = cur1.position;
+              pushProcToSWAP(cur1);
+
+
+              if (isMemEnough(cur)){ //  нашли место после удаления
+                // занимаем место в памяти
+                for(int t = 0; t < cur.mem; t++){
+                  RAM[t + now] = 1;
+                }
+                done = true; // завершаем геноцид процессов
+            }
+          }
+            // восстановление
+            while(!tmp1.empty()){
+              Process c = tmp1.front();
+              tmp1.pop(); HQ[j].push(c);
+            }
+
+            j++;
+        }
+      }
+    }
+    // remaking queue
+    while(!tmp.empty()){
+      Process c = tmp.front();
+      tmp.pop(); HQ[i].push(c);
+    }
+
+  }
+
 }
 
 int main(){
