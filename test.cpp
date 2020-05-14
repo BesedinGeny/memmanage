@@ -77,7 +77,8 @@ void displayProcesses(){
         cout << endl << j <<") " << cur.name << " (priority is " << cur.prio;
         if (cur.is_on_swap) cout << " and is on swap file";
         else cout << " and is on memory";
-        cout << ") - memory: " << cur.mem << " - time: " << cur.lastA << endl;
+        cout << ") - memory: " << cur.mem << " - time: " << cur.lastA;
+        if (cur.position != -1) cout << " - position: " << cur.position << endl;
         j++;
       }
       // remaking
@@ -173,27 +174,21 @@ void updateRAM(){
             int j = 0;
             //cout  << "I NEED RAM\n";
             bool done = false; // эвристика
-            while (j < i && !done){ // less prio processes
+            while (j <= i && !done){ // less prio processes
               queue<Process> tmp1;
               // going through queue
               while(!HQ[j].empty() && !done){
                 Process cur1 = HQ[j].front();
                 // rewriting to make queue as before
-                HQ[j].pop();tmp1.push(cur1);
+                HQ[j].pop();
 
                 // удаление процесса
                 int now = cur1.position;
+                cout << "swapping " << cur1.name << endl;
                 pushProcToSWAP(cur1);
+                tmp1.push(cur1);
 
 
-                if (isMemEnough(cur)){ //  нашли место после удаления
-                  // занимаем место в памяти
-                  for(int t = 0; t < cur.mem; t++){
-                    RAM[t + now] = 1;
-                  }
-                  done = true; // завершаем геноцид процессов
-                  RAM[cur.position] = 2; // отметим старт программы
-              }
             }
               // восстановление
               while(!tmp1.empty()){
@@ -202,8 +197,17 @@ void updateRAM(){
               }
 
 
-
               j++;
+          }
+
+          if (isMemEnough(cur)){ //  нашли место после удаления
+            // занимаем место в памяти
+            for(int t = 0; t < cur.mem; t++){
+              RAM[t + cur.position] = 1;
+            }
+            cur.is_on_swap = false;
+            done = true; // завершаем геноцид процессов
+            RAM[cur.position] = 2; // отметим старт программы
           }
         }
       }
@@ -247,6 +251,7 @@ bool killProcess(Process Fexe){
   return ret;
 }
 
+// цвета желтыйи голубой 43 -44
 void updStatusMonitor(){
 
     //для работы с цветом в консоли
@@ -280,13 +285,13 @@ void updStatusMonitor(){
                 for (int j = 0; j < MAX_SIZE / 100; j++)
                     if (RAM[MAX_SIZE / 100 * i + j] == 1){
                         //SetConsoleTextAttribute(hConsole, (WORD) ((14 << 4) | 8));
-                        cout << "\033[1;41m \033[0m";
+                        cout << "\033[1;44m \033[0m";
                         flag = 1;
                         break;
                     }
                     else if (RAM[MAX_SIZE / 100 * i + j] == 2){
                       //SetConsoleTextAttribute(hConsole, (WORD) ((25 << 4) | 8));
-                      cout << "\033[1;42m \033[0m";
+                      cout << "\033[1;43m \033[0m";
                       flag = 1;
                       break;
                     }
@@ -325,6 +330,8 @@ int main()
   updStatusMonitor();
   Process *p = new Process("a", 1, 1, 1);
   killProcess(*p);
+  updStatusMonitor();
+  createProcess();
   updStatusMonitor();
   //createProcess();
   //updateRAM();
