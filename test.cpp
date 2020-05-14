@@ -96,7 +96,7 @@ bool isMemEnough(Process &exe){
   int begin = 0; // begin of a proj
   //while (begin + memory <= MAX_SIZE){
   for(begin = 0; begin <= MAX_SIZE - memory && !answ; begin++){
-    cout << "Start find place" << endl;
+    //cout << "Start find place" << endl;
     bool isOk = true; // enough from HERE or not
     int needmem = memory;
     int ind = 0;
@@ -111,18 +111,18 @@ bool isMemEnough(Process &exe){
       }
       ind++;
     }
-    cout << isOk<< "here\n";
+    //cout << isOk<< "here\n";
 
     if (isOk){
       exe.position = begin;
-      cout << "OK " << begin  << " + " << ind << endl;
+      //cout << "OK " << begin  << " + " << ind << endl;
       answ = isOk;
       //return isOk;//true
       break;
     }
     //begin++; // going ro NEXT mem sector.
   }
-  cout << "quit the finding\n";
+  //cout << "quit the finding\n";
   return answ;
 }
 
@@ -151,7 +151,7 @@ void updateRAM(){
           // try to place process
           if (isMemEnough(cur)){ // просто нашли место в памяти
             //refilling RAM
-            cout << "I WANT RAM\n";
+            //cout << "I WANT RAM\n";
             cur.is_on_swap = false;
             //cout << "here!\n";
             RAM[cur.position] = 2;
@@ -171,7 +171,7 @@ void updateRAM(){
              мнее приоритетные процессы при следующих итерация i
              */
             int j = 0;
-            cout  << "I NEED RAM\n";
+            //cout  << "I NEED RAM\n";
             bool done = false; // эвристика
             while (j < i && !done){ // less prio processes
               queue<Process> tmp1;
@@ -220,6 +220,33 @@ void updateRAM(){
   }
 }
 
+bool killProcess(Process Fexe){
+  bool ret  = false;
+  for(int i = 9; i >= 0; i--){
+    // buffer queue
+      queue<Process> tmp;
+
+      // going through queue
+      while(!HQ[i].empty()){
+        Process cur = HQ[i].front();
+        // rewriting to make queue as before
+        HQ[i].pop();
+        if (cur.name == Fexe.name && cur.prio == Fexe.prio){
+          // очищаем память в РАМе, и не добавляем в чередь заданий
+          pushProcToSWAP(cur);
+          ret = true;
+        } else
+          tmp.push(cur);
+      }
+      // remaking
+      while(!tmp.empty()){
+        Process c = tmp.front();
+        tmp.pop(); HQ[i].push(c);
+      }
+  }
+  return ret;
+}
+
 void updStatusMonitor(){
 
     //для работы с цветом в консоли
@@ -237,7 +264,8 @@ void updStatusMonitor(){
         myTime = clock() / CLOCKS_PER_SEC;
         // каждую пройденную секунду производим обновление параметров
           updateRAM();
-            system("cls");
+            //system("cls");
+             //cout << "\033[1;31mbold red text\033[0m\n";
             cout << "MONITOR STATUS\t\tWORKING TIME PROGRAMM: " << myTime << "sec\n";
             cout << "\n\nCAPACITY OF MEMORY - " << MAX_SIZE << " blocks";
             // отрисовка оперативной памяти
@@ -252,13 +280,13 @@ void updStatusMonitor(){
                 for (int j = 0; j < MAX_SIZE / 100; j++)
                     if (RAM[MAX_SIZE / 100 * i + j] == 1){
                         //SetConsoleTextAttribute(hConsole, (WORD) ((14 << 4) | 8));
-                        cout << "\044 ";
+                        cout << "\033[1;41m \033[0m";
                         flag = 1;
                         break;
                     }
                     else if (RAM[MAX_SIZE / 100 * i + j] == 2){
                       //SetConsoleTextAttribute(hConsole, (WORD) ((25 << 4) | 8));
-                      cout << "\043 ";
+                      cout << "\033[1;42m \033[0m";
                       flag = 1;
                       break;
                     }
@@ -275,7 +303,7 @@ void updStatusMonitor(){
                 cout << "-";
             cout << " \n";
             // отрисовка всех процессов по приоритету
-            for(int i = 0 ; i < 100; i++) cout << RAM[i]; cout << endl;
+            //for(int i = 0 ; i < 100; i++) cout << RAM[i]; cout << endl;
             displayProcesses();
             cout << "\n\n\nPress 'q' for exit from monitor status or another key for update...\n";
             oldTime = myTime;
@@ -291,9 +319,12 @@ int main()
   //for(int i = 0 ; i < 1000; i++) RAM[i]=0;
   createProcess();
   createProcess();
+  createProcess();
   //for(int i = 0 ; i < 1000; i++) cout << RAM[i];
-  cout << endl;
   //displayProcesses();
+  updStatusMonitor();
+  Process *p = new Process("a", 1, 1, 1);
+  killProcess(*p);
   updStatusMonitor();
   //createProcess();
   //updateRAM();
