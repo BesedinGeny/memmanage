@@ -140,6 +140,10 @@ void updateRAM(){
   //for(int i = 0 ; i < MAX_SIZE; i++) cout << RAM[i];
   for(int i = 9; i >= 0; i--){
       queue<Process> tmp;
+      bool was_mem_graded = false;  // вообщем, если сдвинули процесс влево,
+                                    // то возможно память стала лучше и надо пройтись
+                                    // еще раз по этому приоритету
+      bool done = false;
       //cout << i << " prior)\n";
       // going through queue
       while(!HQ[i].empty()){
@@ -172,7 +176,7 @@ void updateRAM(){
              */
             int j = 0;
             //cout  << "I NEED RAM\n";
-            bool done = false; // эвристика
+            done = false; // эвристика
             while (j <= i && !done){ // less prio processes
               queue<Process> tmp1;
               // going through queue
@@ -210,12 +214,25 @@ void updateRAM(){
           }
 
         }
+      }else{
+        if (cur.position > 0 && !RAM[cur.position - 1]){
+          int beg = cur.position;
+          pushProcToSWAP(cur);
+          // если слева есть свободные ячейки памяти, то это процесс можно лучше разместить
+          // то есть двигаем процесс влево
+          while ( beg > 0 && !RAM[beg - 1] ) beg--;
+          cur.position = beg;
+          cur.is_on_swap = false;
+          RAM[cur.position] = 2;
+          for(int t = 1; t < cur.mem; t++)
+            RAM[t + cur.position] = 1;
+        }
+
       }
       tmp.push(cur);
       // remaking queue
-
-
     }
+
     while(!tmp.empty()){
       Process c = tmp.front();
       tmp.pop(); HQ[i].push(c);
