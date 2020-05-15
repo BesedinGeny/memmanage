@@ -7,7 +7,6 @@
 using namespace std;
 //константы
 const int MAX_SIZE = 100;
-bool need_upd = false;
 vector <int> RAM(MAX_SIZE + 1, 0);
 // структура процесса
 class Process{ //struct
@@ -138,7 +137,7 @@ void pushProcToSWAP(Process &exe){
 }
 
 void updateRAM(){
-  for(int i = 0 ; i < MAX_SIZE; i++) cout << RAM[i];
+  //for(int i = 0 ; i < MAX_SIZE; i++) cout << RAM[i];
   for(int i = 9; i >= 0; i--){
       queue<Process> tmp;
       //cout << i << " prior)\n";
@@ -184,7 +183,7 @@ void updateRAM(){
 
                 // удаление процесса
                 int now = cur1.position;
-                cout << "swapping " << cur1.name << endl;
+                //cout << "swapping " << cur1.name << endl;
                 pushProcToSWAP(cur1);
                 tmp1.push(cur1);
 
@@ -209,6 +208,7 @@ void updateRAM(){
             done = true; // завершаем геноцид процессов
             RAM[cur.position] = 2; // отметим старт программы
           }
+
         }
       }
       tmp.push(cur);
@@ -262,7 +262,6 @@ void updStatusMonitor(){
     //monitor status
     clock_t myTime = clock() / CLOCKS_PER_SEC, oldTime = myTime;
     //ставим обновление процессов
-    int NEED_UPD = 1;
     char exit = 'a';
     cout << "\nPress key for update...\n";
     while (exit != 'q'){
@@ -319,22 +318,46 @@ void updStatusMonitor(){
 
 int main()
 {
-  //Process *pr;
-  //cout << "";
-  //for(int i = 0 ; i < 1000; i++) RAM[i]=0;
-  createProcess();
-  createProcess();
-  createProcess();
-  //for(int i = 0 ; i < 1000; i++) cout << RAM[i];
-  //displayProcesses();
-  updStatusMonitor();
-  Process *p = new Process("a", 1, 1, 1);
-  killProcess(*p);
-  updStatusMonitor();
-  createProcess();
-  updStatusMonitor();
-  //createProcess();
-  //updateRAM();
-  //displayProcesses();
+  char s;
+  char exit = 1;
+  while (exit){
+    string Fname;int pr;bool f;
+    Process *F;
+      char choose;
+      do{
+          cout << "\tMain menu:\n";
+          cout << "\t\tChoose the right number!\n";
+          cout << "1. Create process\n";
+          cout << "2. Kill the process\n";
+          cout << "3. Status monitor\n";
+          cout << "4. Exit\n";
+          cin >> choose;
+      }while (choose < '1' || choose > '5');
+      switch (choose)
+      {
+          case '1':
+              createProcess();
+          break;
+          case '2':
+              //killProcess
+              cout << "Input name of killing process: ";
+              cin >> Fname;
+              cout << "Input priority of killing process: ";
+              cin >> pr;
+              F = new Process(Fname, 1, pr, 1);
+              f = killProcess(*F);
+              if (f) cout << "Sucsessful killing\n";
+              else cout << "No matches\n";
+          break;
+          case '3':
+              updStatusMonitor();
+          break;
+
+          case '4':
+              exit = 0;
+              cout << "Exiting from the programm\n";
+          break;
+      }
+  }
   return 0;
 }
